@@ -18,7 +18,7 @@ public class Client {
 
         try{
  
-            socket = new Socket("localhost", 6001);
+            socket = new Socket(InetAddress.getByName("localhost"), 6001);
             socket.setSoTimeout(TIMEOUT*1000);
             
             in = new ObjectInputStream(socket.getInputStream());
