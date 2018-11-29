@@ -24,7 +24,7 @@ public class Client {
             in = new ObjectInputStream(socket.getInputStream());
             out = new ObjectOutputStream(socket.getOutputStream());
             
-            out.writeObject(new Registo("cris", "pass2"));
+            out.writeObject(new Registo("cris", "pass234"));
             out.flush();
             
 
