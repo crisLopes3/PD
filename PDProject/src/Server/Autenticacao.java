@@ -5,6 +5,7 @@
  */
 package Server;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 
 
@@ -13,7 +14,7 @@ import java.net.InetAddress;
  *
  * @author Pedro
  */
-public class Autenticacao {
+public class Autenticacao implements Serializable{
     private Registo registo;
     private InetAddress ipCliente;
 
