@@ -2,21 +2,25 @@ package Server;
 
 import java.net.*;
 import java.io.*;
+import java.sql.*;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Server {
+public class Server implements Constantes{
 
-    private ServerSocket socketAutenticacao;
-    private ServerSocket socketRegista;
-    private List<Registo> Registos = new ArrayList<Registo>();
-    private List<Autenticacao> inClientes = new ArrayList<Autenticacao>();
+    public ServerSocket socketAutenticacao;
+    public ServerSocket socketRegista;
+    public List<Registo> Registos = new ArrayList<>();
+    public List<Autenticacao> inClientes = new ArrayList<>();
 
     public Server(String args[], boolean debug) {
 
         socketRegista = null;
         try {
             socketRegista = new ServerSocket(6001);
+            socketAutenticacao=new ServerSocket(6002);
         } catch (NumberFormatException e) {
             System.out.println("O porto de escuta deve ser um inteiro positivo:\n\t" + e);
         } catch (IOException e) {
@@ -24,135 +28,51 @@ public class Server {
             socketRegista = null;
         }
     }
-
-    public final void RegistaCliente() {
-        Socket toClientSocket;
-        ObjectInputStream in;
-        ObjectOutputStream out;
-        Registo request;
-        String resposta = "";
-
-        if (socketRegista == null) {
-            return;
-        }
-
-        System.out.println("TCP Serialized Time Server iniciado no porto " + socketRegista.getLocalPort() + " ...");
-
-        while (true) {
-
-            try {
-                toClientSocket = socketRegista.accept();
-            } catch (IOException e) {
-                System.out.println("Erro enquanto aguarda por um pedido de ligação:\n\t" + e);
-                return;
-            }
-
-            try {
-
-                out = new ObjectOutputStream(toClientSocket.getOutputStream());
-                in = new ObjectInputStream(toClientSocket.getInputStream());
-
-                request = (Registo) (in.readObject());
-
-                if (request == null) { //EOF
-                    toClientSocket.close();
-                    continue; //to next client request
-                }
-                Registos.add(request);
-                //Constroi a resposta terminando-a com uma mudanca de lina
-                resposta += "Registado";
-
-                //Envia a resposta ao cliente
-                out.writeObject(resposta);
-                out.flush();
-
-            } catch (IOException e) {
-                System.out.println("Erro na comunicação como o cliente "
-                        + toClientSocket.getInetAddress().getHostAddress() + ":"
-                        + toClientSocket.getPort() + "\n\t" + e);
-            } catch (ClassNotFoundException e) {
-                System.out.println("Pedido recebido de tipo inesperado:\n\t" + e);
-            } finally {
-                try {
-                    if (toClientSocket != null) {
-                        toClientSocket.close();
-                    }
-                } catch (IOException e) {
-                }
-            }
-        } //while
-    }
-
-    public final boolean RecebeAutenticacao() {
-        Socket toClientSocket;
-        ObjectInputStream in;
-        ObjectOutputStream out;
-        Autenticacao request;
-        String resposta = "";
-
-        if (socketAutenticacao == null) {
-            return false;
-        }
-
-        System.out.println("TCP Serialized Time Server iniciado no porto " + socketAutenticacao.getLocalPort() + " ...");
-
-        while (true) {
-
-            try {
-                toClientSocket = socketAutenticacao.accept();
-            } catch (IOException e) {
-                System.out.println("Erro enquanto aguarda por um pedido de ligação:\n\t" + e);
-                return false;
-            }
-
-            try {
-
-                out = new ObjectOutputStream(toClientSocket.getOutputStream());
-                in = new ObjectInputStream(toClientSocket.getInputStream());
-
-                request = (Autenticacao) (in.readObject());
-
-                if (request == null || !VerificaRegisto(request.getRegisto())) { //EOF
-                    toClientSocket.close();
-                    continue; //to next client request
-                }
-                inClientes.add(request);
-                //Constroi a resposta terminando-a com uma mudanca de lina
-                resposta += "autenticado";
-
-                //Envia a resposta ao cliente
-                out.writeObject(resposta);
-                out.flush();
-
-            } catch (IOException e) {
-                System.out.println("Erro na comunicação como o cliente "
-                        + toClientSocket.getInetAddress().getHostAddress() + ":"
-                        + toClientSocket.getPort() + "\n\t" + e);
-            } catch (ClassNotFoundException e) {
-                System.out.println("Pedido recebido de tipo inesperado:\n\t" + e);
-            } finally {
-                try {
-                    if (toClientSocket != null) {
-                        toClientSocket.close();
-                    }
-                } catch (IOException e) {
-                }
-            }
-        }
-    }
-    private final boolean VerificaRegisto(Registo registo){
+    
+    public boolean lancaThreads(){
+        Thread t1=new RegistrationRequest(this);
+        t1.setDaemon(true);
+        t1.start();
         
-        for (Registo Registo : Registos) {
-            if(Registo.equals(registo))
-                return true;
-            
-        }
-        return false;
+        Thread t2=new AuthenticationRequest(this);
+        t2.setDaemon(true);
+        t2.start();
+        
+        return t1!=null && t2!=null;
     }
-    public static void main(String[] args) {
+
+    public static void main(String[] args) throws ClassNotFoundException {
         Server timeServer;
 
-        timeServer = new Server(args, true);
-        timeServer.RegistaCliente();
+        Connection conn=null;
+        
+        try{
+            System.out.println("Connected");
+            conn=DriverManager.getConnection(CONN_STRING,USERNAME,PASSWORD);
+            System.out.println("Connected");
+        }catch(SQLException e){
+            System.err.print(e);
+        }
+        
+//        timeServer = new Server(args, true);
+//        timeServer.lancaThreads();
+        
+//        try {
+//            System.out.println("Comando:");
+//            BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+//           
+//            while (true) {
+//
+//                String cast = in.readLine();
+//
+//                if (cast.equals("exit")) {
+//                    return;
+//                }
+//            }
+//        } catch (Exception e) {
+//
+//        }
+//        
     }
+
 }
