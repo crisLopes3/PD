@@ -1,6 +1,5 @@
 package Server;
 
-
 import java.net.*;
 import java.io.*;
 import java.sql.*;
@@ -12,8 +11,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Server implements Constantes {
-    
-   public static final int TIMEOUT = 10;
+
+    public static final int TIMEOUT = 10;
     public ServerSocket socketAutenticacao;
     public ServerSocket socketRegista;
     public List<Registo> Registos = new ArrayList<>();
@@ -74,7 +73,7 @@ public class Server implements Constantes {
                 if (cast.equals("lista")) {
                     timeServer.ListaRegistos();
                 }
-                if(cast.equals("envia")){
+                if (cast.equals("envia")) {
                     timeServer.enviarMensagensUtilizadores("ola");
                 }
             }
@@ -103,6 +102,7 @@ public class Server implements Constantes {
                 aux.add(aux1);
             }
             this.setRegistos(aux);
+            enviarMensagensUtilizadores("BD actualiazada");
         } catch (SQLException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             //return false;
@@ -110,44 +110,61 @@ public class Server implements Constantes {
         //return true;
     }
 
-    public boolean enviarMensagensUtilizadores(String msg) throws IOException {
+    public boolean enviarMensagensUtilizadores(String msg) {
+
+        for (Registo Registo : Registos) {
+            if (Registo.getEstado() == true) {
+                try {
+                    enviarMensagemUtlizador(Registo.getIdUtlizador(), msg);
+                } catch (IOException ex) {
+                    System.out.println("Erro ao enviar mensagem para utilizador com o id: " + Registo.getUserName());
+                }
+            }
+        }
+
+        return true;
+
+    }
+
+    public boolean enviarMensagemUtlizador(int id, String msg) throws IOException {
 
         ObjectInputStream in;
         ObjectOutputStream out;
         Socket socket = null;
+        Registo aux = getRegistoid(id);
 
-        try {
-
-            for (Registo Registo : Registos) {
-                socket = new Socket("localhost", Registo.getPortoTCP());
-                socket.setSoTimeout(TIMEOUT * 1000);
+        if (aux != null) {
+            try {
+                socket = new Socket("localhost", aux.getPortoTCP());
                 in = new ObjectInputStream(socket.getInputStream());
                 out = new ObjectOutputStream(socket.getOutputStream());
                 out.writeObject(msg);
                 out.flush();
-            }
-
-//            response = (String) in.readObject();
-//
-//            if (response.equals("registao")) {
-//                REGISTO = true;
-//            }
-//            System.out.println(response);
-        } catch (UnknownHostException e) {
-            System.out.println("Destino desconhecido:\n\t" + e);
-        } catch (NumberFormatException e) {
-            System.out.println("O porto do servidor deve ser um inteiro positivo.");
-        } catch (SocketTimeoutException e) {
-            System.out.println("Nao foi recebida qualquer resposta:\n\t" + e);
-        } catch (IOException e) {
-            System.out.println("Ocorreu um erro no acesso ao socket:\n\t" + e);
-        } finally {
-            if (socket != null) {
-                socket.close();
+            } catch (UnknownHostException e) {
+                System.out.println("Destino desconhecido:\n\t" + e);
+            } catch (NumberFormatException e) {
+                System.out.println("O porto do servidor deve ser um inteiro positivo.");
+            } catch (SocketTimeoutException e) {
+                System.out.println("Nao foi recebida qualquer resposta:\n\t" + e);
+            } catch (IOException e) {
+                System.out.println("Ocorreu um erro no acesso ao socket:\n\t" + e);
+            } finally {
+                if (socket != null) {
+                    socket.close();
+                }
             }
         }
-        return true;
+        return false;
 
+    }
+
+    public Registo getRegistoid(int id) {
+        for (Registo Registo : Registos) {
+            if (Registo.getIdUtlizador() == id) {
+                return Registo;
+            }
+        }
+        return null;
     }
 
     public int getIdRegisto(String username, String password) {
