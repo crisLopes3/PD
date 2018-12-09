@@ -9,6 +9,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -22,13 +27,13 @@ public class AuthenticationRequest extends Thread {
         this.server = server;
     }
 
-    private final boolean VerificaRegisto(Registo registo) {
+    private final boolean VerificaRegisto(Autenticacao autenticacao) {
 
-        for (Registo Registo : server.Registos) {
-            if (Registo.equals(registo)) {
+        for (int i = 0; i < server.Registos.size(); i++) {
+            if (autenticacao.getUsername().compareTo(server.Registos.get(i).getUserName()) == 0
+                    && autenticacao.getPassword().compareTo(server.Registos.get(i).getPassWord()) == 0) {
                 return true;
             }
-
         }
         return false;
     }
@@ -62,19 +67,19 @@ public class AuthenticationRequest extends Thread {
                 in = new ObjectInputStream(toClientSocket.getInputStream());
 
                 request = (Autenticacao) (in.readObject());
-                if (request == null || !VerificaRegisto(request.getRegisto())) { //EOF
+                if (request == null || !VerificaRegisto(request)) { //EOF
 
                     System.out.println("Erro utlizador necessita de estar registado primeiro:\n\t");
                     resposta += "Nao registado";
                     //Envia a resposta ao cliente
+
                     out.writeObject(resposta);
                     out.flush();
                     toClientSocket.close();
                     continue; //to next client request
                 }
-
-                server.inClientes.add(request);
                 //Constroi a resposta terminando-a com uma mudanca de lina
+                actualizaBaseDados(request);
                 resposta += "autenticado";
 
                 //Envia a resposta ao cliente
@@ -96,6 +101,26 @@ public class AuthenticationRequest extends Thread {
                 }
             }
         }
+    }
+
+    public boolean actualizaBaseDados(Autenticacao aux) {
+
+        PreparedStatement st = null;
+        ResultSet res = null;
+
+        try {
+            st = server.conn.prepareStatement("UPDATE utilizador SET utilizador.Estado="+true+" WHERE utilizador.id="+this.server.getIdRegisto(aux.getUsername(), aux.getPassword())+""); // t
+            st.executeUpdate();
+            this.server.ActualizaListasDados();
+
+            System.out.println("entrou no actualiza");
+
+        } catch (SQLException ex) {
+            System.out.println(" n entrou");
+            return false;
+        }
+
+        return true;
     }
 
 }

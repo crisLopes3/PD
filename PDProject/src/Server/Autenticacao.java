@@ -15,21 +15,24 @@ import java.net.InetAddress;
  * @author Pedro
  */
 public class Autenticacao implements Serializable{
-    private Registo registo;
-    private InetAddress ipCliente;
+    private String username;
+    private String password;
 
-    public Autenticacao(Registo registo, InetAddress ipCliente) {
-        this.registo = registo;
-        this.ipCliente = ipCliente;
+    public Autenticacao(String username, String password) {
+        this.username = username;
+        this.password = password;
     }
 
-    public Registo getRegisto() {
-        return registo;
+    public String getPassword() {
+        return password;
     }
 
-    public InetAddress getIpCliente() {
-        return ipCliente;
+    public String getUsername() {
+        return username;
     }
+
     
+
+  
     
 }
