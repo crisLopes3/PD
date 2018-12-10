@@ -13,6 +13,6 @@ public interface Constantes {
     public static final String DRIVER="com.mysql.jdbc.Driver";
     public  static final String USERNAME="root";
     public  static final String PASSWORD="";
-    public  static final String  CONN_STRING="jdbc:mysql://localhost:3306/pdbasedados?useTimezone=true&serverTimezone=UTC";
+    public  static final String  CONN_STRING="jdbc:mysql://localhost/pdbasedados?useTimezone=true&serverTimezone=UTC";
 
 }
