@@ -33,7 +33,7 @@ public class Cliente extends Thread implements Constantes {
 
         try {
 
-            socket = new Socket("localhost", 6001);
+            socket = new Socket("10.65.145.71", 6001);
             socket.setSoTimeout(TIMEOUT * 1000);
 
             out = new ObjectOutputStream(socket.getOutputStream());
@@ -86,7 +86,7 @@ public class Cliente extends Thread implements Constantes {
         Autenticacao aux = new Autenticacao(Username, Password);
         try {
 
-            socket = new Socket("localhost", 6001);
+            socket = new Socket("10.65.145.71", 6001);
             socket.setSoTimeout(TIMEOUT * 1000);
 
             out = new ObjectOutputStream(socket.getOutputStream());
@@ -152,6 +152,7 @@ public class Cliente extends Thread implements Constantes {
             try {
 
                 in = new ObjectInputStream(toClientSocket.getInputStream());
+
 
                 request = (String) (in.readObject());
 

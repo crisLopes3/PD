@@ -32,11 +32,11 @@ public class Server implements Constantes {
 
     public boolean lancaThreads() {
         System.out.println("Lancou");
-        Thread t1=new TreadPedidos(this);
+        Thread t1 = new TreadPedidos(this);
         t1.setDaemon(true);
         t1.start();
 
-      return true;
+        return true;
     }
 
     public static void main(String[] args) throws ClassNotFoundException {
@@ -96,7 +96,7 @@ public class Server implements Constantes {
                 aux.add(novo);
             }
             this.setRegistos(aux);
-           // enviarMensagensUtilizadores("BD actualiazada");
+            // enviarMensagensUtilizadores("BD actualiazada");
         } catch (SQLException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             //return false;
@@ -109,7 +109,7 @@ public class Server implements Constantes {
         for (Registo Registo : Registos) {
             if (Registo.getEstado() == true) {
                 try {
-                    System.out.println("enviar para o ultizador com o id: "+Registo.getIdUtlizador());
+                    System.out.println("enviar para o ultizador com o id: " + Registo.getIdUtlizador());
                     enviarMensagemUtlizador(Registo.getIdUtlizador(), msg);
                 } catch (IOException ex) {
                     System.out.println("Erro ao enviar mensagem para utilizador com o id: " + Registo.getUserName());
@@ -127,10 +127,10 @@ public class Server implements Constantes {
         Socket socket = null;
         Registo registo = getRegistoid(id);
 
-       if (registo != null) {
+        if (registo != null) {
             try {
-                System.out.println("envia: "+registo.getIpUtilzador()+" "+registo.getPortoTCP());
-                socket = new Socket(registo.getIpUtilzador(),registo.getPortoTCP());
+                System.out.println("envia: " + registo.getIpUtilzador() + " " + registo.getPortoTCP());
+                socket = new Socket(registo.getIpUtilzador(), registo.getPortoTCP());
                 out = new ObjectOutputStream(socket.getOutputStream());
                 out.writeObject(msg);
                 out.flush();
@@ -164,7 +164,7 @@ public class Server implements Constantes {
     public int getIdRegisto(String username, String password) {
         for (int i = 0; i < this.Registos.size(); i++) {
             if (Registos.get(i).getUserName().compareTo(username) == 0 && Registos.get(i).getPassWord().compareTo(password) == 0) {
-                System.out.println("id retornado: "+ Registos.get(i).getIdUtlizador());
+                System.out.println("id retornado: " + Registos.get(i).getIdUtlizador());
                 return Registos.get(i).getIdUtlizador();
             }
         }
