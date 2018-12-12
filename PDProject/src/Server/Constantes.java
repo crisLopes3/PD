@@ -14,5 +14,8 @@ public interface Constantes {
     public  static final String USERNAME="root";
     public  static final String PASSWORD="";
     public  static final String  CONN_STRING="jdbc:mysql://localhost/pdbasedados?useTimezone=true&serverTimezone=UTC";
+    
+    public static final int PEDIDO_REGISTO=1;
+    public static final int PEDIDO_AUTENTICACAO=2;
 
 }

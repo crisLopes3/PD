@@ -1,17 +1,14 @@
-
 package Client;
 
 import Server.Autenticacao;
+import Server.Constantes;
 import Server.Registo;
-import Server.RegistrationRequest;
 import java.net.*;
 import java.io.*;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Cliente extends Thread {
+public class Cliente extends Thread implements Constantes{
 
     public static boolean REGISTO = false;
     public static boolean AUTENTICADO = false;
@@ -26,7 +23,7 @@ public class Cliente extends Thread {
         ObjectInputStream in = null;
         String response;
 
-        System.out.println("Dados De Registo:");
+        System.out.println("Dados De Registo\n\n");
         System.out.println("Utruduza Username: ");
         BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
         String Username = input.readLine();
@@ -36,18 +33,23 @@ public class Cliente extends Thread {
 
         try {
 
-            socket = new Socket("localhost", 6004);
+            socket = new Socket("localhost", 6001);
             socket.setSoTimeout(TIMEOUT * 1000);
 
-            in = new ObjectInputStream(socket.getInputStream());
+
             out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            out.writeObject(PEDIDO_REGISTO);
+            out.flush();
+
 
             out.writeObject(novo);
             out.flush();
 
             response = (String) in.readObject();
 
-            if (response.equals("registao")) {
+            if (response.equals("regista")) {
                 REGISTO = true;
             }
             System.out.println(response);
@@ -86,7 +88,7 @@ public class Cliente extends Thread {
         Autenticacao aux = new Autenticacao(Username, Password);
         try {
 
-            socket = new Socket("localhost", 6005);
+            socket = new Socket("localhost", 6001);
             socket.setSoTimeout(TIMEOUT * 1000);
 
             in = new ObjectInputStream(socket.getInputStream());
@@ -130,7 +132,7 @@ public class Cliente extends Thread {
         String resposta = "";
         ServerSocket aux = null;
         try {
-            aux = new ServerSocket(6001);
+            aux = new ServerSocket(6002);
         } catch (IOException ex) {
             Logger.getLogger(Cliente.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -210,4 +212,3 @@ public class Cliente extends Thread {
         }
     }
 }
-

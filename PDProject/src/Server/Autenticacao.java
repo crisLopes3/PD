@@ -30,9 +30,5 @@ public class Autenticacao implements Serializable{
     public String getUsername() {
         return username;
     }
-
-    
-
-  
     
 }

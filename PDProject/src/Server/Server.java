@@ -13,37 +13,30 @@ import java.util.logging.Logger;
 public class Server implements Constantes {
 
     public static final int TIMEOUT = 10;
-    public ServerSocket socketAutenticacao;
-    public ServerSocket socketRegista;
+    public ServerSocket socketPedidos;
     public List<Registo> Registos = new ArrayList<>();
-    public List<Autenticacao> inClientes = new ArrayList<>();
     public Connection conn;
 
     public Server(String args[], boolean debug) {
 
-        socketRegista = null;
         try {
-            socketRegista = new ServerSocket(6004);
-            socketAutenticacao = new ServerSocket(6005);
+            socketPedidos = new ServerSocket(6001);
             // ActualizaListasDados();
         } catch (NumberFormatException e) {
             System.out.println("O porto de escuta deve ser um inteiro positivo:\n\t" + e);
         } catch (IOException e) {
             System.out.println("Ocorreu um erro na criação do socket de escuta:\n\t" + e);
-            socketRegista = null;
+            socketPedidos = null;
         }
     }
 
     public boolean lancaThreads() {
-        Thread t1 = new RegistrationRequest(this);
+        System.out.println("Lancou");
+        Thread t1=new TreadPedidos(this);
         t1.setDaemon(true);
         t1.start();
 
-        Thread t2 = new AuthenticationRequest(this);
-        t2.setDaemon(true);
-        t2.start();
-
-        return t1 != null && t2 != null;
+      return true;
     }
 
     public static void main(String[] args) throws ClassNotFoundException {
@@ -74,11 +67,12 @@ public class Server implements Constantes {
                     timeServer.ListaRegistos();
                 }
                 if (cast.equals("envia")) {
-                    timeServer.enviarMensagensUtilizadores("ola");
+                  //  timeServer.enviarMensagensUtilizadores("ola");
+                    timeServer.enviarMensagemUtlizador(1, "ola1");
                 }
             }
-        } catch (Exception e) {
-
+        } catch (IOException e) {
+            System.out.println(e);
         }
 
     }
@@ -98,11 +92,11 @@ public class Server implements Constantes {
             while (res.next()) {
                 Registo aux1;
                 aux1 = new Registo(res.getInt(1), res.getString(2), res.getString(3), res.getInt(4), res.getInt(5), res.getString(6), res.getBoolean(7));
-                System.out.println(aux.toString());
+                System.out.println(aux1.toString());
                 aux.add(aux1);
             }
             this.setRegistos(aux);
-            enviarMensagensUtilizadores("BD actualiazada");
+           // enviarMensagensUtilizadores("BD actualiazada");
         } catch (SQLException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             //return false;
@@ -110,33 +104,33 @@ public class Server implements Constantes {
         //return true;
     }
 
-    public boolean enviarMensagensUtilizadores(String msg) {
-
-        for (Registo Registo : Registos) {
-            if (Registo.getEstado() == true) {
-                try {
-                    enviarMensagemUtlizador(Registo.getIdUtlizador(), msg);
-                } catch (IOException ex) {
-                    System.out.println("Erro ao enviar mensagem para utilizador com o id: " + Registo.getUserName());
-                }
-            }
-        }
-
-        return true;
-
-    }
+//    public boolean enviarMensagensUtilizadores(String msg) {
+//
+//        for (Registo Registo : Registos) {
+//           // if (Registo.getEstado() == true) {
+//                try {
+//                  
+//                    enviarMensagemUtlizador(Registo.getIdUtlizador(), msg);
+//                } catch (IOException ex) {
+//                    System.out.println("Erro ao enviar mensagem para utilizador com o id: " + Registo.getUserName());
+//                }
+//           // }
+//        }
+//
+//        return true;
+//
+//    }
 
     public boolean enviarMensagemUtlizador(int id, String msg) throws IOException {
 
-        ObjectInputStream in;
         ObjectOutputStream out;
         Socket socket = null;
         Registo aux = getRegistoid(id);
 
-        if (aux != null) {
+      // if (aux != null) {
             try {
-                socket = new Socket("localhost", aux.getPortoTCP());
-                in = new ObjectInputStream(socket.getInputStream());
+     //          System.out.println("envia: "+aux.getIpUtilzador()+" "+aux.getPortoTCP());
+                socket = new Socket("localhost",6002);
                 out = new ObjectOutputStream(socket.getOutputStream());
                 out.writeObject(msg);
                 out.flush();
@@ -147,13 +141,13 @@ public class Server implements Constantes {
             } catch (SocketTimeoutException e) {
                 System.out.println("Nao foi recebida qualquer resposta:\n\t" + e);
             } catch (IOException e) {
-                System.out.println("Ocorreu um erro no acesso ao socket:\n\t" + e);
+                System.out.println("Ocorreu um erro no acesso ao socke ao enviart ao cliente:\n\t" + e);
             } finally {
                 if (socket != null) {
                     socket.close();
                 }
             }
-        }
+        //}
         return false;
 
     }

@@ -1,7 +1,10 @@
 package Server;
 
+import Client.Ficheiro;
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Registo implements Serializable {
     private int idUtlizador;
@@ -11,6 +14,7 @@ public class Registo implements Serializable {
     private int portoTCP;
     private String IpUtilzador;
     private boolean estado=false;
+    private List<Ficheiro> ListaFicheiros;
 
     public Registo(int idUtlizador, String userName, String passWord, int portoUDP, int portoTCP, String IpUtilzador) {
         this.idUtlizador = idUtlizador;
@@ -19,6 +23,7 @@ public class Registo implements Serializable {
         this.portoUDP = portoUDP;
         this.portoTCP = portoTCP;
         this.IpUtilzador = IpUtilzador;
+        this.ListaFicheiros=new ArrayList<>();
     }
     
       public Registo(int idUtlizador, String userName, String passWord, int portoUDP, int portoTCP, String IpUtilzador,boolean estado) {
@@ -29,6 +34,7 @@ public class Registo implements Serializable {
         this.portoTCP = portoTCP;
         this.IpUtilzador = IpUtilzador;
         this.estado=estado;
+        this.ListaFicheiros=new ArrayList<>();
     }
 
 
@@ -54,7 +60,7 @@ public class Registo implements Serializable {
 
     public int getIdUtlizador() {
         return idUtlizador;
-    }
+}
     
     public boolean getEstado(){
         return estado;
