@@ -8,7 +8,7 @@ import java.io.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Cliente extends Thread implements Constantes{
+public class Cliente extends Thread implements Constantes {
 
     public static boolean REGISTO = false;
     public static boolean AUTENTICADO = false;
@@ -33,16 +33,14 @@ public class Cliente extends Thread implements Constantes{
 
         try {
 
-            socket = new Socket("localhost", 6001);
+            socket = new Socket("10.65.145.71", 6001);
             socket.setSoTimeout(TIMEOUT * 1000);
-
 
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
 
             out.writeObject(PEDIDO_REGISTO);
             out.flush();
-
 
             out.writeObject(novo);
             out.flush();
@@ -88,11 +86,14 @@ public class Cliente extends Thread implements Constantes{
         Autenticacao aux = new Autenticacao(Username, Password);
         try {
 
-            socket = new Socket("localhost", 6001);
+            socket = new Socket("10.65.145.71", 6001);
             socket.setSoTimeout(TIMEOUT * 1000);
 
-            in = new ObjectInputStream(socket.getInputStream());
             out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            out.writeObject(PEDIDO_AUTENTICACAO);
+            out.flush();
 
             out.writeObject(aux);
             out.flush();
@@ -149,9 +150,8 @@ public class Cliente extends Thread implements Constantes{
             }
 
             try {
-
-                out = new ObjectOutputStream(toClientSocket.getOutputStream());
                 in = new ObjectInputStream(toClientSocket.getInputStream());
+                out = new ObjectOutputStream(toClientSocket.getOutputStream());
 
                 request = (String) (in.readObject());
 
