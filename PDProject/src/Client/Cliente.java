@@ -8,7 +8,7 @@ import java.io.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Cliente extends Thread implements Constantes{
+public class Cliente extends Thread implements Constantes {
 
     public static boolean REGISTO = false;
     public static boolean AUTENTICADO = false;
@@ -36,20 +36,18 @@ public class Cliente extends Thread implements Constantes{
             socket = new Socket("localhost", 6001);
             socket.setSoTimeout(TIMEOUT * 1000);
 
-
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
 
             out.writeObject(PEDIDO_REGISTO);
             out.flush();
 
-
             out.writeObject(novo);
             out.flush();
 
             response = (String) in.readObject();
 
-            if (response.equals("regista")) {
+            if (response.equals(REGISTADO)) {
                 REGISTO = true;
             }
             System.out.println(response);
@@ -91,15 +89,18 @@ public class Cliente extends Thread implements Constantes{
             socket = new Socket("localhost", 6001);
             socket.setSoTimeout(TIMEOUT * 1000);
 
-            in = new ObjectInputStream(socket.getInputStream());
             out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            out.writeObject(PEDIDO_AUTENTICACAO);
+            out.flush();
 
             out.writeObject(aux);
             out.flush();
 
             response = (String) in.readObject();
 
-            if (response.equals("autenticado")) {
+            if (response.equals(AUTENTICADO)) {
                 AUTENTICADO = true;
 
             }
@@ -150,7 +151,6 @@ public class Cliente extends Thread implements Constantes{
 
             try {
 
-                out = new ObjectOutputStream(toClientSocket.getOutputStream());
                 in = new ObjectInputStream(toClientSocket.getInputStream());
 
                 request = (String) (in.readObject());
@@ -187,13 +187,12 @@ public class Cliente extends Thread implements Constantes{
 
     public static void main(String[] args) throws IOException {
 
-        System.out.println("Comando:");
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         Thread t1 = new Cliente();
         t1.setDaemon(true);
         t1.start();
         while (true) {
-
+            System.out.println("Comando:");
             switch (in.readLine()) {
                 case "1":
                     if (!REGISTO) {

@@ -67,8 +67,8 @@ public class Server implements Constantes {
                     timeServer.ListaRegistos();
                 }
                 if (cast.equals("envia")) {
-                  //  timeServer.enviarMensagensUtilizadores("ola");
-                    timeServer.enviarMensagemUtlizador(1, "ola1");
+                    timeServer.enviarMensagensUtilizadores("ola");
+                    //timeServer.enviarMensagemUtlizador(1, "ola1");
                 }
             }
         } catch (IOException e) {
@@ -90,10 +90,10 @@ public class Server implements Constantes {
             res = st.executeQuery();
 
             while (res.next()) {
-                Registo aux1;
-                aux1 = new Registo(res.getInt(1), res.getString(2), res.getString(3), res.getInt(4), res.getInt(5), res.getString(6), res.getBoolean(7));
-                System.out.println(aux1.toString());
-                aux.add(aux1);
+                Registo novo;
+                novo = new Registo(res.getInt(1), res.getString(2), res.getString(3), res.getInt(4), res.getInt(5), res.getString(6), res.getBoolean(7));
+                System.out.println(novo.toString());
+                aux.add(novo);
             }
             this.setRegistos(aux);
            // enviarMensagensUtilizadores("BD actualiazada");
@@ -104,33 +104,33 @@ public class Server implements Constantes {
         //return true;
     }
 
-//    public boolean enviarMensagensUtilizadores(String msg) {
-//
-//        for (Registo Registo : Registos) {
-//           // if (Registo.getEstado() == true) {
-//                try {
-//                  
-//                    enviarMensagemUtlizador(Registo.getIdUtlizador(), msg);
-//                } catch (IOException ex) {
-//                    System.out.println("Erro ao enviar mensagem para utilizador com o id: " + Registo.getUserName());
-//                }
-//           // }
-//        }
-//
-//        return true;
-//
-//    }
+    public boolean enviarMensagensUtilizadores(String msg) {
+
+        for (Registo Registo : Registos) {
+            if (Registo.getEstado() == true) {
+                try {
+                    System.out.println("enviar para o ultizador com o id: "+Registo.getIdUtlizador());
+                    enviarMensagemUtlizador(Registo.getIdUtlizador(), msg);
+                } catch (IOException ex) {
+                    System.out.println("Erro ao enviar mensagem para utilizador com o id: " + Registo.getUserName());
+                }
+            }
+        }
+
+        return true;
+
+    }
 
     public boolean enviarMensagemUtlizador(int id, String msg) throws IOException {
 
         ObjectOutputStream out;
         Socket socket = null;
-        Registo aux = getRegistoid(id);
+        Registo registo = getRegistoid(id);
 
-      // if (aux != null) {
+       if (registo != null) {
             try {
-     //          System.out.println("envia: "+aux.getIpUtilzador()+" "+aux.getPortoTCP());
-                socket = new Socket("localhost",6002);
+                System.out.println("envia: "+registo.getIpUtilzador()+" "+registo.getPortoTCP());
+                socket = new Socket(registo.getIpUtilzador(),registo.getPortoTCP());
                 out = new ObjectOutputStream(socket.getOutputStream());
                 out.writeObject(msg);
                 out.flush();
@@ -141,13 +141,13 @@ public class Server implements Constantes {
             } catch (SocketTimeoutException e) {
                 System.out.println("Nao foi recebida qualquer resposta:\n\t" + e);
             } catch (IOException e) {
-                System.out.println("Ocorreu um erro no acesso ao socke ao enviart ao cliente:\n\t" + e);
+                System.out.println("Ocorreu um erro no acesso ao socke ao enviar ao cliente:\n\t" + e);
             } finally {
                 if (socket != null) {
                     socket.close();
                 }
             }
-        //}
+        }
         return false;
 
     }
@@ -164,6 +164,7 @@ public class Server implements Constantes {
     public int getIdRegisto(String username, String password) {
         for (int i = 0; i < this.Registos.size(); i++) {
             if (Registos.get(i).getUserName().compareTo(username) == 0 && Registos.get(i).getPassWord().compareTo(password) == 0) {
+                System.out.println("id retornado: "+ Registos.get(i).getIdUtlizador());
                 return Registos.get(i).getIdUtlizador();
             }
         }

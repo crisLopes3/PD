@@ -9,6 +9,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -59,12 +64,18 @@ public class TreadPedidos extends Thread {
                             System.out.println("Pedido 1");
                             ///in = new ObjectInputStream(socketToCleinte.getInputStream());
                             novoRegisto = (Registo) in.readObject();
+                            adicionaRegisto(novoRegisto);
                             resposta += "Registado";
                             break;
                         case 2:
                             System.out.println("Pedido 2");
                             //in = new ObjectInputStream(socketToCleinte.getInputStream());
                             novaAutenticacao = (Autenticacao) in.readObject();
+                            if (!VerificaRegisto(novaAutenticacao)) {
+                                resposta += "nao esta autenticado";
+                                break;
+                            }
+                            actualizaBaseDados(novaAutenticacao);
                             resposta += "Autenticado";
                             break;
 
@@ -89,9 +100,62 @@ public class TreadPedidos extends Thread {
             try {
                 if (socketToCleinte != null) {
                     socketToCleinte.close();
+                     System.out.println("fecha socket");
                 }
             } catch (IOException e) {
             }
         }
+    }
+
+    public boolean actualizaBaseDados(Autenticacao aux) {
+
+        PreparedStatement st = null;
+        ResultSet res = null;
+
+        try {
+            st = server.conn.prepareStatement("UPDATE utilizador SET utilizador.Estado=" + true + " WHERE utilizador.idUtilizador=" + this.server.getIdRegisto(aux.getUsername(), aux.getPassword()) + ""); // t
+            st.executeUpdate();
+            this.server.ActualizaListasDados();
+
+            System.out.println("entrou no actualiza");
+
+        } catch (SQLException ex) {
+            System.out.println(" n entrou");
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean VerificaRegisto(Autenticacao autenticacao) {
+
+        for (int i = 0; i < server.Registos.size(); i++) {
+            if (autenticacao.getUsername().compareTo(server.Registos.get(i).getUserName()) == 0
+                    && autenticacao.getPassword().compareTo(server.Registos.get(i).getPassWord()) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean adicionaRegisto(Registo novo) {
+
+        PreparedStatement st = null;
+        try {
+            st = server.conn.prepareStatement("INSERT INTO Utilizador(Username,Password,PortoUDP,PortoTCP,IpUtilizador,Estado) VALUES(?,?,?,?,?,?)");
+
+            st.setString(1, novo.getUserName());
+            st.setString(2, novo.getPassWord());
+            st.setInt(3, novo.getPortoTCP());
+            st.setInt(4, novo.getPortoUDP());
+            st.setString(5, novo.getIpUtilzador());
+            st.setBoolean(6, false);
+            st.executeUpdate();
+        } catch (SQLException ex) {
+            System.err.println("erro na query");
+        }
+        server.Registos.add(novo);
+        
+        return true;
     }
 }
