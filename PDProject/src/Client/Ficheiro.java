@@ -5,17 +5,19 @@
  */
 package Client;
 
+import java.io.Serializable;
+
 /**
  *
  * @author Pedro
  */
-public class Ficheiro {
+public class Ficheiro implements Serializable{
     private int idficheiro;
     private String Nome;
     private String Directoria;
-    private String idUtlizador;
+    private int idUtlizador;
 
-    public Ficheiro(int idficheiro, String Nome, String Directoria, String idUtlizador) {
+    public Ficheiro(int idficheiro, String Nome, String Directoria, int idUtlizador) {
         this.idficheiro = idficheiro;
         this.Nome = Nome;
         this.Directoria = Directoria;
@@ -26,7 +28,7 @@ public class Ficheiro {
         this.Directoria = Directoria;
     }
 
-    public String getIdUtlizador() {
+    public int getIdUtlizador() {
         return idUtlizador;
     }
 
@@ -36,6 +38,10 @@ public class Ficheiro {
 
     public int getIdficheiro() {
         return idficheiro;
+    }
+
+    public String getNome() {
+        return Nome;
     }
     
 

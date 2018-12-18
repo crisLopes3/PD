@@ -5,6 +5,7 @@
  */
 package Server;
 
+import Client.Ficheiro;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -12,14 +13,13 @@ import java.net.Socket;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.List;
 
 /**
  *
  * @author Pedro
  */
-public class TreadPedidos extends Thread {
+public class TreadPedidos extends Thread implements Constantes{
 
     private final Server server;
 
@@ -60,16 +60,14 @@ public class TreadPedidos extends Thread {
                     pedido = (Integer) in.readObject();
 
                     switch (pedido) {
-                        case 1:
-                            System.out.println("Pedido 1");
-                            ///in = new ObjectInputStream(socketToCleinte.getInputStream());
+                        case PEDIDO_REGISTO:
+                            System.out.println("Pedido Registo");
                             novoRegisto = (Registo) in.readObject();
                             adicionaRegisto(novoRegisto);
                             resposta += "Registado";
                             break;
-                        case 2:
-                            System.out.println("Pedido 2");
-                            //in = new ObjectInputStream(socketToCleinte.getInputStream());
+                        case PEDIDO_AUTENTICACAO:
+                            System.out.println("Pedido Auteticaçao");
                             novaAutenticacao = (Autenticacao) in.readObject();
                             if (!VerificaRegisto(novaAutenticacao)) {
                                 resposta += "nao esta autenticado";
@@ -78,6 +76,13 @@ public class TreadPedidos extends Thread {
                             actualizaBaseDados(novaAutenticacao);
                             resposta += "Autenticado";
                             break;
+                        case DISPONIBLIZAR_FICHEIROS:
+                            System.out.println("Pedido para Disponiblizar Ficheiro");
+                            Autenticacao cliUtlizador=(Autenticacao)in.readObject();
+                            List<Ficheiro> listaFicheiros=( List<Ficheiro>)in.readObject();
+                            if(listaFicheiros.size()>0 && cliUtlizador!=null){
+                                
+                            }
 
                         default:
                             System.out.println("Pedido estranho");
@@ -157,5 +162,25 @@ public class TreadPedidos extends Thread {
         server.Registos.add(novo);
         
         return true;
+    }
+    public boolean adicionaFicheiro(List<Ficheiro> listaFicheiro,Autenticacao pedidoCliente){
+        int idCliente=this.server.getIdRegisto(pedidoCliente.getUsername(), pedidoCliente.getPassword());
+        PreparedStatement st = null;
+        
+         try {
+          for(int i=0;i<listaFicheiro.size();i++){   
+            st = server.conn.prepareStatement("INSERT INTO ficheiro (Nome,Directoria,idUtilizador) VALUES(?,?,?)");
+            st.setString(1, listaFicheiro.get(i).getNome());
+            st.setString(2,listaFicheiro.get(i).getDirectoria());
+            st.setInt(3, idCliente);
+            st.executeUpdate();
+          }
+        } catch (SQLException ex) {
+            System.err.println("erro na query");
+        }
+        server.getRegistoid(idCliente).addFicheiro(listaFicheiro);
+        
+        return true;
+        
     }
 }

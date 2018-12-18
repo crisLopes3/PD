@@ -70,6 +70,12 @@ public class Registo implements Serializable {
         this.estado = estado;
     }
     
+    public void addFicheiro(List<Ficheiro> lista){
+        for(int i=0;i<lista.size();i++){
+            ListaFicheiros.add(lista.get(i));
+        }
+    }
+    
 
     @Override
     public boolean equals(Object obj) {
