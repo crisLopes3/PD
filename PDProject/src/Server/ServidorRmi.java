@@ -103,6 +103,7 @@ public class ServidorRmi extends UnicastRemoteObject implements RemoteServiceInt
         for (Remote remoteAux : listaRemotes) {
             if(remoteAux.equals(remote)){
                 listaRemotes.remove(remote);
+                System.out.println("Servico Remoto elminado");
             }
         }
     }

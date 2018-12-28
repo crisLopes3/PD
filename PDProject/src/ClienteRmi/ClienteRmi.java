@@ -40,7 +40,7 @@ public class ClienteRmi extends UnicastRemoteObject implements RemoteClienteInte
          */
         System.out.println("Digite o ip do servidor: ");
         // String ipServidor = in.readLine();
-        String ipServidor = "localhost";
+        String ipServidor = "192.168.1.85";
         objectUrl = "rmi://" + ipServidor + "/ObservacaoSistema";
 
         try {
