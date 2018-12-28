@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package Client;
+package others;
 
 import java.io.Serializable;
 
@@ -43,6 +43,13 @@ public class Ficheiro implements Serializable{
     public String getNome() {
         return Nome;
     }
+
+    @Override
+    public String toString() {
+       String aux="id: " +idficheiro+" Nome:" +Nome+" Direcotoria: "+Directoria+" idUltilzador: "+idUtlizador;
+       return aux;
+    }
+    
     
 
         

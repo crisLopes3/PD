@@ -1,43 +1,73 @@
 package Client;
 
-import Server.Autenticacao;
-import Server.Constantes;
-import Server.Registo;
+import others.DadosDowload;
+import others.Ficheiro;
+import others.Autenticacao;
+import others.Constantes;
+import others.InformaçaoUtlizador;
+import others.Registo;
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import others.Historico;
 
-public class Cliente extends Thread implements Constantes {
+public class Cliente implements Constantes {
 
     public static boolean REGISTO = false;
-    public static boolean AUTENTICADO = false;
-    public static final int TIMEOUT = 10; //segundos 
+    public static boolean IS_AUTENTICADO = false;
+    public boolean THREAD_ON = true;
+    public boolean exitCliente;
+    public static int TIMEOUT = 10; //segundos 
     public static String USERNAME = "";
     public static String PASSWORD = "";
+    public String DESTINOFICHEIRO = "";
+    public static int PORTTCPDOWLOAD = 6010;
+    public static int PORTTCPMENSAGENS = 6008;
+    public static int PORTUDP = 6009;
+    public static String IPSERVIDOR = "";
+    public static int PORT_SERVIDOR_TCP_ESCUTA = 6001;
+    public TreadRecebeMensagensTCP recebeMensagensTCP;
+    public TreadPedidoFicheiroCliente pedidosFicheiro;
+    public TreadRecebeMensagensUDP recebeMensagensUDP;
+    public TreadVerificaFicheiros verificaFicheiros;
 
-    public Cliente() {
+    ///////Informaçao///////////////7
+    public List<InformaçaoUtlizador> informacaoServidor;
+
+    public Cliente(String ipServidor, String destinoFicheiro) {
+        DESTINOFICHEIRO = destinoFicheiro;
+        IPSERVIDOR = ipServidor;
+        exitCliente = false;
+        informacaoServidor = new ArrayList<>();
+        recebeMensagensTCP = new TreadRecebeMensagensTCP(this);
+        recebeMensagensTCP.setDaemon(true);
+        recebeMensagensTCP.start();
+        pedidosFicheiro = new TreadPedidoFicheiroCliente(this);
+        pedidosFicheiro.setDaemon(true);
+        pedidosFicheiro.start();
+        recebeMensagensUDP = new TreadRecebeMensagensUDP(this);
+        recebeMensagensUDP.setDaemon(true);
+        recebeMensagensUDP.start();
+        verificaFicheiros = new TreadVerificaFicheiros(this);
+        verificaFicheiros.setDaemon(true);
+        verificaFicheiros.start();
+
     }
 
-    public static final boolean PedidoDeRegisto() throws IOException {
+    public boolean PedidoDeRegisto(String Username, String Password) throws IOException {
         Socket socket = null;
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
         String response;
 
-        System.out.println("Dados De Registo\n\n");
-        System.out.println("Utruduza Username: ");
-        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-        USERNAME = input.readLine();
-        System.out.println("Utruduza Password: ");
-        PASSWORD = input.readLine();
-        Registo novo = new Registo(0, USERNAME, PASSWORD, 6001, 6002, InetAddress.getLocalHost().getHostAddress()); // os portos é o cliente que escolhe
+        USERNAME = Username;
+        PASSWORD = Password;
+        Registo novo = new Registo(0, USERNAME, PASSWORD, PORTUDP, PORTTCPMENSAGENS, InetAddress.getLocalHost().getHostAddress(), PORTTCPDOWLOAD); // os portos é o cliente que escolhe
 
         try {
 
-            socket = new Socket("10.65.145.71", 6001);
+            socket = new Socket(IPSERVIDOR, PORT_SERVIDOR_TCP_ESCUTA);
             socket.setSoTimeout(TIMEOUT * 1000);
 
             out = new ObjectOutputStream(socket.getOutputStream());
@@ -74,23 +104,19 @@ public class Cliente extends Thread implements Constantes {
         return true;
     }
 
-    public static final boolean PedidoDeAutenticacao() throws IOException {
+    public boolean PedidoDeAutenticacao(String Username, String password) throws IOException {
         Socket socket = null;
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
         String response;
 
-        System.out.println("Dados De Autenticaçao:");
-        System.out.println("Utruduza Username: ");
-        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-        String Username = input.readLine();
-        System.out.println("Utruduza Password: ");
-        String Password = input.readLine();
+        USERNAME = Username;
+        PASSWORD = password;
 
-        Autenticacao aux = new Autenticacao(Username, Password);
+        Autenticacao aux = new Autenticacao(USERNAME, PASSWORD);
         try {
 
-            socket = new Socket("10.65.145.71", 6001);
+            socket = new Socket(IPSERVIDOR, PORT_SERVIDOR_TCP_ESCUTA);
             socket.setSoTimeout(TIMEOUT * 1000);
 
             out = new ObjectOutputStream(socket.getOutputStream());
@@ -104,9 +130,9 @@ public class Cliente extends Thread implements Constantes {
 
             response = (String) in.readObject();
 
-            if (response.equals(AUTENTICADO)) {
-                AUTENTICADO = true;
-
+            if (response.compareTo(AUTENTICADO) == 0) {
+                System.out.println("entrei aqui");
+                IS_AUTENTICADO = true;
             }
             System.out.println(response);
 
@@ -128,31 +154,62 @@ public class Cliente extends Thread implements Constantes {
         return true;
     }
 
-    public static final boolean DisponiblizarFicheiro() throws IOException {
+    public boolean PedidoDesconect() throws IOException {
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        String response;
+
+        Autenticacao aux = new Autenticacao(USERNAME, PASSWORD);
+        try {
+
+            socket = new Socket(IPSERVIDOR, PORT_SERVIDOR_TCP_ESCUTA);
+            socket.setSoTimeout(TIMEOUT * 1000);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            out.writeObject(DISCONECTAR);
+            out.flush();
+
+            out.writeObject(aux);
+            out.flush();
+
+            response = (String) in.readObject();
+
+            System.out.println(response);
+
+        } catch (UnknownHostException e) {
+            System.out.println("Destino desconhecido:\n\t" + e);
+        } catch (NumberFormatException e) {
+            System.out.println("O porto do servidor deve ser um inteiro positivo.");
+        } catch (SocketTimeoutException e) {
+            System.out.println("Nao foi recebida qualquer resposta:\n\t" + e);
+        } catch (IOException e) {
+            System.out.println("Ocorreu um erro no acesso ao socket:\n\t" + e);
+        } catch (ClassNotFoundException e) {
+            System.out.println("O objecto recebido nao e' do tipo esperado:\n\t" + e);
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
+        }
+        return true;
+    }
+
+    //verficar melhor
+    public boolean DisponiblizarFicheiro(String Nome, String Directoria) throws IOException {
 
         Socket socket = null;
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
         String response;
-        List<Ficheiro> listaFicheiro = new ArrayList<>();
-        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("Disponiblizar Ficheiros");
-        do {
-            System.out.println("Utruduza Nome Ficheiro: ");
 
-            String Nome = input.readLine();
-            System.out.println("Introduza Directoria Ficheiro ");
-            String Directoria = input.readLine();
-            Ficheiro novo = new Ficheiro(Nome, Directoria);
-            listaFicheiro.add(novo);
-
-            System.out.println("Se pretender para press <1>: ");
-
-        } while (input.readLine() != "1");
+        Ficheiro novo = new Ficheiro(Nome, Directoria);
 
         try {
 
-            socket = new Socket("10.65.145.71", 6001);
+            socket = new Socket(IPSERVIDOR, PORT_SERVIDOR_TCP_ESCUTA);
             socket.setSoTimeout(TIMEOUT * 1000);
 
             out = new ObjectOutputStream(socket.getOutputStream());
@@ -163,16 +220,12 @@ public class Cliente extends Thread implements Constantes {
 
             out.writeObject(new Autenticacao(USERNAME, PASSWORD));
             out.flush();
-            
-            out.writeObject(listaFicheiro);
+
+            out.writeObject(novo);
             out.flush();
 
             response = (String) in.readObject();
 
-            if (response.equals(AUTENTICADO)) {
-                AUTENTICADO = true;
-
-            }
             System.out.println(response);
 
         } catch (UnknownHostException e) {
@@ -194,95 +247,131 @@ public class Cliente extends Thread implements Constantes {
 
     }
 
-    @Override
-    public void run() {
-        Socket toClientSocket;
-        ObjectInputStream in;
-        ObjectOutputStream out;
-        String request;
-        String resposta = "";
-        ServerSocket aux = null;
+    public boolean EleminarFicheiroDisponablizado(String nomeFicheiro) throws IOException {
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        String response;
+
         try {
-            aux = new ServerSocket(6002);
-        } catch (IOException ex) {
-            Logger.getLogger(Cliente.class.getName()).log(Level.SEVERE, null, ex);
+
+            socket = new Socket(IPSERVIDOR, PORT_SERVIDOR_TCP_ESCUTA);
+            socket.setSoTimeout(TIMEOUT * 1000);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            out.writeObject(ELEMINAR_FICHEIRO);
+            out.flush();
+
+            out.writeObject(new Autenticacao(USERNAME, PASSWORD));
+            out.flush();
+
+            out.writeObject(nomeFicheiro);
+            out.flush();
+
+            response = (String) in.readObject();
+
+            System.out.println(response);
+
+        } catch (UnknownHostException e) {
+            System.out.println("Destino desconhecido:\n\t" + e);
+        } catch (NumberFormatException e) {
+            System.out.println("O porto do servidor deve ser um inteiro positivo.");
+        } catch (SocketTimeoutException e) {
+            System.out.println("Nao foi recebida qualquer resposta:\n\t" + e);
+        } catch (IOException e) {
+            System.out.println("Ocorreu um erro no acesso ao socket:\n\t" + e);
+        } catch (ClassNotFoundException e) {
+            System.out.println("O objecto recebido nao e' do tipo esperado:\n\t" + e);
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
         }
-
-        System.out.println("Lista Mensagens no porto:  " + aux.getLocalPort() + " ...");
-
-        while (true) {
-
-            try {
-                toClientSocket = aux.accept();
-            } catch (IOException e) {
-                System.out.println("Erro enquanto aguarda por um pedido de ligação:\n\t" + e);
-                return;
-            }
-
-            try {
-
-                in = new ObjectInputStream(toClientSocket.getInputStream());
-
-                request = (String) (in.readObject());
-
-                if (request == null) { //EOF
-                    toClientSocket.close();
-                    continue; //to next client request
-                }
-
-                System.out.println("Mensagens: " + request);
-                //Constroi a resposta terminando-a com uma mudanca de lina
-//                resposta += "Registado";
-//
-//                //Envia a resposta ao cliente
-//                out.writeObject(resposta);
-//                out.flush();
-
-            } catch (IOException e) {
-                System.out.println("Erro na comunicação como o cliente "
-                        + toClientSocket.getInetAddress().getHostAddress() + ":"
-                        + toClientSocket.getPort() + "\n\t" + e);
-            } catch (ClassNotFoundException e) {
-                System.out.println("Pedido recebido de tipo inesperado:\n\t" + e);
-            } finally {
-                try {
-                    if (toClientSocket != null) {
-                        toClientSocket.close();
-                    }
-                } catch (IOException e) {
-                }
-            }
-        } //while
+        return true;
     }
 
-    public static void main(String[] args) throws IOException {
+    public boolean DowloadFicheiro(String nomeFicheiro) throws IOException {
+        Socket socket = null;
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        String nomeFicneiro, response;
+        DadosDowload dadosFicheiro;
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-        Thread t1 = new Cliente();
-        t1.setDaemon(true);
-        t1.start();
-        while (true) {
-            System.out.println("Comando:");
-            switch (in.readLine()) {
-                case "1":
-                    if (!REGISTO) {
-                        System.out.println("Pedido de Registo:");
-                        PedidoDeRegisto();
-                    }
-                    break;
-                case "2":
-                    if (!AUTENTICADO) {
-                        System.out.println("Pedido de autenticaçao:");
-                        PedidoDeAutenticacao();
-                    }
-                    break;
-                case "3":
-                    if (!AUTENTICADO) {
-                        System.out.println("Disponiblizar Ficheiro:");
-                        DisponiblizarFicheiro();
-                    }
-                    break;
+        try {
 
+            socket = new Socket(IPSERVIDOR, PORT_SERVIDOR_TCP_ESCUTA);
+            socket.setSoTimeout(TIMEOUT * 1000);
+
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+
+            out.writeObject(DOWLOAD_FICHEIRO);
+            out.flush();
+
+            out.writeObject(new Autenticacao(USERNAME, PASSWORD));
+            System.out.println("Autenticaçao: " + USERNAME + " " + PASSWORD);
+            out.flush();
+
+            out.writeObject(nomeFicheiro);
+            out.flush();
+
+            dadosFicheiro = (DadosDowload) in.readObject();
+            if (dadosFicheiro != null) {
+                System.out.println("vou correr a tread para inciar Dowload: " + dadosFicheiro.getIpDonoFicheiro() + ": " + dadosFicheiro.getTCPDonoFicheiro());
+                Thread tread = new TreadClienteReceberFicheiro(dadosFicheiro, this);
+                tread.setDaemon(true);
+                tread.start();
+            }
+
+            response = (String) in.readObject();
+
+            System.out.println(response);
+
+        } catch (UnknownHostException e) {
+            System.out.println("Destino desconhecido:\n\t" + e);
+        } catch (NumberFormatException e) {
+            System.out.println("O porto do servidor deve ser um inteiro positivo.");
+        } catch (SocketTimeoutException e) {
+            System.out.println("Nao foi recebida qualquer resposta:\n\t" + e);
+        } catch (IOException e) {
+            System.out.println("Ocorreu um erro no acesso ao socket:\n\t" + e);
+        } catch (ClassNotFoundException e) {
+            System.out.println("O objecto recebido nao e' do tipo esperado:\n\t" + e);
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
+        }
+        return true;
+    }
+
+    public void DisconectarCliente() {
+        // THREAD_ON=false;
+        exitCliente = true;
+    }
+
+    public void setInformacaoServidor(List<InformaçaoUtlizador> informacaoServidor) {
+        this.informacaoServidor = informacaoServidor;
+    }
+
+    public List<InformaçaoUtlizador> getInformacaoServidor() {
+        return informacaoServidor;
+    }
+
+    public void listarInformacaoActualzada() {
+        for (int i = 0; i < informacaoServidor.size(); i++) {
+            System.out.println(informacaoServidor.get(i).toString());
+        }
+    }
+
+    public void ListarHistorico() {
+        for (int i = 0; i < informacaoServidor.size(); i++) {
+            if (informacaoServidor.get(i).Username.compareTo(USERNAME) == 0) {
+                for (Historico historico : informacaoServidor.get(i).getHistorico()) {
+                    System.out.println(historico.toString());
+                }
             }
         }
     }
