@@ -206,8 +206,8 @@ public class TreadPedidos extends Thread implements Constantes {
             st = server.conn.prepareStatement("INSERT INTO Utilizador(Username,Password,PortoUDP,PortoTCP,IpUtilizador,Estado,PortoTCPdowload) VALUES(?,?,?,?,?,?,?)");
             st.setString(1, novo.getUserName());
             st.setString(2, novo.getPassWord());
-            st.setInt(3, novo.getPortoTCP());
-            st.setInt(4, novo.getPortoUDP());
+            st.setInt(3, novo.getPortoUDP());
+            st.setInt(4, novo.getPortoTCP());
             st.setString(5, novo.getIpUtilzador());
             st.setBoolean(6, false);
             st.setInt(7, novo.getPortoTCPdowload());

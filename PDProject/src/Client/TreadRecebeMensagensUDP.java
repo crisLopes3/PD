@@ -47,7 +47,7 @@ public class TreadRecebeMensagensUDP extends Thread implements Constantes {
     public void run() {
 
         String MensagemOutroServidor, MensagemMeuServidor;
-        Socket socket = null;
+        Socket socketServdidor=null;
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
         if (socket == null) {
@@ -68,13 +68,13 @@ public class TreadRecebeMensagensUDP extends Thread implements Constantes {
                     System.out.println("BD_atualizada refrescar informaçao: ");
                      {
                         try {
-                            socket = new Socket(IPSERVIDOR, PORT_SERVIDOR_TCP_ESCUTA);
-                            socket.setSoTimeout(TIMEOUT * 1000);
+                            socketServdidor = new Socket(IPSERVIDOR, PORT_SERVIDOR_TCP_ESCUTA);
+                            socketServdidor.setSoTimeout(TIMEOUT * 1000);
 
-                            out = new ObjectOutputStream(socket.getOutputStream());
-                            in = new ObjectInputStream(socket.getInputStream());
+                            out = new ObjectOutputStream(socketServdidor.getOutputStream());
+                            in = new ObjectInputStream(socketServdidor.getInputStream());
 
-                            out.writeObject(DOWLOAD_FICHEIRO);
+                            out.writeObject(REFRECAR_BD);
                             out.flush();
 
                             MensagemMeuServidor = (String) in.readObject();
@@ -86,7 +86,13 @@ public class TreadRecebeMensagensUDP extends Thread implements Constantes {
                             System.out.println("objeto recebido n é o pretendido");
                         }
                     }
-
+            {
+                try {
+                    socketServdidor.close();
+                } catch (IOException ex) {
+                    System.out.println("Erro ao fechar Socket Servidor");
+                }
+            }
                     break;
                 default:
                     System.out.println("Mensagem Servidor: " + MensagemOutroServidor);
@@ -104,7 +110,7 @@ public class TreadRecebeMensagensUDP extends Thread implements Constantes {
         }
         try {
             packet = new DatagramPacket(new byte[MAX_SIZE], MAX_SIZE);
-            System.out.println("A espera de receber Datagram: ");
+            System.out.println("A espera de receber Datagram no porto: "+this.cliente.PORTUDP);
             socket.receive(packet);
             System.out.println("Recebido datagram: ");
             ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(packet.getData()));

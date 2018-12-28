@@ -9,6 +9,7 @@ import others.Constantes;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.rmi.RemoteException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
@@ -18,7 +19,7 @@ import java.sql.SQLException;
  */
 public class mainServidor implements Constantes {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws RemoteException {
         Server timeServer = new Server(args, true);
 
         try {
@@ -31,7 +32,7 @@ public class mainServidor implements Constantes {
         if (timeServer.conn != null) {
             timeServer.lancaThreads();
             timeServer.ActualizaListasDados();
-
+        
             try {
                 System.out.println("Comando:");
                 BufferedReader in = new BufferedReader(new InputStreamReader(System.in));

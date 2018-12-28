@@ -26,7 +26,7 @@ public class Cliente implements Constantes {
     public static int PORTTCPMENSAGENS = 6008;
     public static int PORTUDP = 6009;
     public static String IPSERVIDOR = "";
-    public static int PORT_SERVIDOR_TCP_ESCUTA = 6001;
+    public static int PORT_SERVIDOR_TCP_ESCUTA = 6002;
     public TreadRecebeMensagensTCP recebeMensagensTCP;
     public TreadPedidoFicheiroCliente pedidosFicheiro;
     public TreadRecebeMensagensUDP recebeMensagensUDP;

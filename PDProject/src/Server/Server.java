@@ -8,10 +8,13 @@ import others.DadosDowload;
 import others.Ficheiro;
 import java.net.*;
 import java.io.*;
+import java.rmi.RemoteException;
 import java.sql.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import others.Historico;
 
 public class Server implements Constantes {
@@ -22,11 +25,13 @@ public class Server implements Constantes {
     public Connection conn;
     public List<Autenticacao> inServidor = new ArrayList<>();
     public boolean enviaMensagensUdpServidorActualizada = true;
+    public int TCPServidor = 6002;
+    public ServidorRmi servidorRmi;
 
-    public Server(String args[], boolean debug) {
+    public Server(String args[], boolean debug) throws RemoteException {
 
         try {
-            socketPedidos = new ServerSocket(6001);
+            socketPedidos = new ServerSocket(TCPServidor);
             // ActualizaListasDados();
         } catch (NumberFormatException e) {
             System.out.println("O porto de escuta deve ser um inteiro positivo:\n\t" + e);
@@ -34,9 +39,12 @@ public class Server implements Constantes {
             System.out.println("Ocorreu um erro na criação do socket de escuta:\n\t" + e);
             socketPedidos = null;
         }
+        servidorRmi = new ServidorRmi(this);
+        
     }
 
     public boolean lancaThreads() {
+        servidorRmi.InicioServidorRmi();
         System.out.println("Lancou");
         Thread t1 = new TreadPedidos(this);
         t1.setDaemon(true);
@@ -80,9 +88,14 @@ public class Server implements Constantes {
             }
             this.setRegistos(aux);
             enviarMensagensUtilizadores(BD_ATUALIZADA);
+
+            servidorRmi.EnviaInformacaoServidor(this.getListaInformaçaoUtlizadores());
+
         } catch (SQLException ex) {
             System.out.println("Erro ao carregar os registos");
             //return false;
+        } catch (RemoteException ex) {
+            System.out.println("Ocooreu aqui um erro ");
         }
         //return true;
     }
@@ -111,10 +124,11 @@ public class Server implements Constantes {
 
                             out.writeObject(msg);
                             out.flush();
-
+                            System.out.println("vou enviar Mensagem para o porto: " + Registo.getPortoUDP());
                             DatagramPacket packet = new DatagramPacket(ArraySend.toByteArray(), ArraySend.size(), InetAddress.getByName(Registo.getIpUtilzador()), Registo.getPortoUDP());
 
                             socket.send(packet);
+                            System.out.println("Mensagem Enviada");
                         } catch (IOException ex) {
                             System.out.println("Erro ao enviar mensagem para utilizador via udp com o id: " + Registo.getUserName());
                         }
@@ -182,8 +196,8 @@ public class Server implements Constantes {
 
     public List<InformaçaoUtlizador> getListaInformaçaoUtlizadores() {
         List<InformaçaoUtlizador> lista = new ArrayList<>();
-        for (int i = 0; i < inServidor.size(); i++) {
-            Registo registoIn = this.getRegistoid(this.getIdRegisto(inServidor.get(i).getUsername(), inServidor.get(i).getPassword()));
+        for (int i = 0; i < registos.size(); i++) {
+            Registo registoIn = this.getRegistoid(this.getIdRegisto(registos.get(i).getUserName(), registos.get(i).getPassWord()));
             System.out.println("Registo retornada com o username: " + registoIn.getUserName());
             InformaçaoUtlizador utlizador = new InformaçaoUtlizador(registoIn.getUserName());
             for (Ficheiro ficheiro : registoIn.getListaFicheiros()) {
