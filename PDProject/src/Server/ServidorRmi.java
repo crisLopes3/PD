@@ -7,6 +7,9 @@ package Server;
 
 import ClienteRmi.RemoteClienteInterface;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -25,6 +28,7 @@ public class ServidorRmi extends UnicastRemoteObject implements RemoteServiceInt
     public static final String SERVICE_NAME = "ObservacaoSistema";
     private Server servidor;
     public List<Remote> listaRemotes;
+    public Registry r;
 
     public ServidorRmi(Server servidor) throws RemoteException {
         this.servidor = servidor;
@@ -33,16 +37,10 @@ public class ServidorRmi extends UnicastRemoteObject implements RemoteServiceInt
 
     public void InicioServidorRmi() {
 
-        /*
-         * Trata os argumentos da linha de comando
-         */
- /*
-        * Lanca o rmiregistry localmente no porto TCP por omissao (1099) ou, caso este ja' se encontre
-        * a correr, obtem uma referencia.
-         */
+   
         try {
 
-            Registry r;
+            
 
             try {
 
@@ -65,6 +63,7 @@ public class ServidorRmi extends UnicastRemoteObject implements RemoteServiceInt
              * Regista o servico no rmiregistry local para que os clientes possam localiza'-lo, ou seja,
              * obter a sua referencia remota (endereco IP, porto de escuta, etc.).
              */
+            System.setProperty("java.rmi.server.hostname","192.168.1.85");
             r.bind(SERVICE_NAME, this);
 
             System.out.println("Servico " + SERVICE_NAME + " registado no registry...");
@@ -82,6 +81,12 @@ public class ServidorRmi extends UnicastRemoteObject implements RemoteServiceInt
             System.exit(1);
         }
     }
+    
+    public void CloseServidorRmi() throws RemoteException, NotBoundException, MalformedURLException{
+        Naming.unbind("rmi://192.168.1.85/"+SERVICE_NAME+"");
+        UnicastRemoteObject.unexportObject(this, true);
+        
+    }
 
     @Override
     public void EnviaInformacaoServidor(List<InformaçaoUtlizador> lista) throws RemoteException {
@@ -94,6 +99,7 @@ public class ServidorRmi extends UnicastRemoteObject implements RemoteServiceInt
     @Override
     public void AddRemoteService(RemoteClienteInterface remote) throws RemoteException {
         if (remote != null) {
+            System.out.println("Remote adicionada");
             listaRemotes.add(remote);
         }
     }

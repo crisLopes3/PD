@@ -190,6 +190,11 @@ public class TreadPedidos extends Thread implements Constantes {
             if (res.next()) {
                 System.out.println("econtrei um");
                 //this.server.actualizaBaseDados(autenticacao, desejo, res.getInt(1));
+                String ipRegisto=res.getString(6);
+                int idRegisto=res.getInt(1);
+                if(ipRegisto.compareTo(CONN_STRING)!=0){
+                    UpdateIpRegisto(autenticacao,idRegisto);
+                }
                 return true;
             }
         } catch (SQLException ex) {
@@ -291,6 +296,19 @@ public class TreadPedidos extends Thread implements Constantes {
         }
         System.err.println("erro ao econtrar destino e origem");
         return false;
+    }
+    
+    private void UpdateIpRegisto(Autenticacao autenticacao,int idRegisto){
+        PreparedStatement st = null;
+        
+        try {
+            st = this.server.conn.prepareStatement("UPDATE utilizador SET utilizador.IpUtilizador=" + autenticacao.getIpUtlizador() + " WHERE utilizador.idUtilizador=" + idRegisto + ""); // 
+            st.executeUpdate();
+        } catch (SQLException ex) {
+            System.out.println("erro na query");
+        }
+        this.server.ActualizaListasDados();
+        System.out.println("ip actualizado do username: "+autenticacao.getUsername());
     }
 
 }

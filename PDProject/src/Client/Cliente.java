@@ -113,7 +113,7 @@ public class Cliente implements Constantes {
         USERNAME = Username;
         PASSWORD = password;
 
-        Autenticacao aux = new Autenticacao(USERNAME, PASSWORD);
+        Autenticacao aux = new Autenticacao(USERNAME, PASSWORD,InetAddress.getLocalHost().getHostAddress());
         try {
 
             socket = new Socket(IPSERVIDOR, PORT_SERVIDOR_TCP_ESCUTA);
@@ -160,7 +160,7 @@ public class Cliente implements Constantes {
         ObjectInputStream in = null;
         String response;
 
-        Autenticacao aux = new Autenticacao(USERNAME, PASSWORD);
+        Autenticacao aux = new Autenticacao(USERNAME, PASSWORD,InetAddress.getLocalHost().getHostAddress());
         try {
 
             socket = new Socket(IPSERVIDOR, PORT_SERVIDOR_TCP_ESCUTA);
@@ -218,7 +218,7 @@ public class Cliente implements Constantes {
             out.writeObject(DISPONIBLIZAR_FICHEIROS);
             out.flush();
 
-            out.writeObject(new Autenticacao(USERNAME, PASSWORD));
+            out.writeObject(new Autenticacao(USERNAME, PASSWORD,InetAddress.getLocalHost().getHostAddress()));
             out.flush();
 
             out.writeObject(novo);
@@ -264,7 +264,7 @@ public class Cliente implements Constantes {
             out.writeObject(ELEMINAR_FICHEIRO);
             out.flush();
 
-            out.writeObject(new Autenticacao(USERNAME, PASSWORD));
+            out.writeObject(new Autenticacao(USERNAME, PASSWORD,InetAddress.getLocalHost().getHostAddress()));
             out.flush();
 
             out.writeObject(nomeFicheiro);
@@ -310,7 +310,7 @@ public class Cliente implements Constantes {
             out.writeObject(DOWLOAD_FICHEIRO);
             out.flush();
 
-            out.writeObject(new Autenticacao(USERNAME, PASSWORD));
+            out.writeObject(new Autenticacao(USERNAME, PASSWORD,InetAddress.getLocalHost().getHostAddress()));
             System.out.println("Autenticaçao: " + USERNAME + " " + PASSWORD);
             out.flush();
 

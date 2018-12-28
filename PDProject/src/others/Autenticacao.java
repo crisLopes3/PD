@@ -16,10 +16,12 @@ import java.io.Serializable;
 public class Autenticacao implements Serializable{
     private String username;
     private String password;
+    private String ipUtlizador;
 
-    public Autenticacao(String username, String password) {
+    public Autenticacao(String username, String password,String ipUtilizador) {
         this.username = username;
         this.password = password;
+        this.ipUtlizador=ipUtilizador;
     }
 
     public String getPassword() {
@@ -29,5 +31,10 @@ public class Autenticacao implements Serializable{
     public String getUsername() {
         return username;
     }
+
+    public String getIpUtlizador() {
+        return ipUtlizador;
+    }
+    
     
 }

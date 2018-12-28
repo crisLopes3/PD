@@ -8,6 +8,7 @@ import others.DadosDowload;
 import others.Ficheiro;
 import java.net.*;
 import java.io.*;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.sql.*;
 import java.sql.SQLException;
@@ -295,6 +296,15 @@ public class Server implements Constantes {
             } catch (IOException ex) {
                 System.out.println("Erro ao Disconectar o cliente: " + inServidor.get(i).getUsername());
             }
+        }
+        try {
+            servidorRmi.CloseServidorRmi();
+        } catch (RemoteException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NotBoundException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
